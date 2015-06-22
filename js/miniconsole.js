@@ -66,6 +66,10 @@ miniconsole.onresize = function(){};
 miniconsole.draw = function(){
 	canvas.width += 1;
 	canvas.width += -1;
+	
+	if( miniconsole.act == null ){
+		return
+	}
 
 	if( !miniconsole.paused ){
 		miniconsole.matrix.forEach( function( column ){
@@ -80,6 +84,10 @@ miniconsole.draw = function(){
 };
 
 miniconsole.update = function(){
+	if( miniconsole.act == null ){
+		return
+	}
+	
 	if( miniconsole.ini ){
 		for( var i = 0; i < miniconsole.video.w; i++ ){
 			var column = [];
