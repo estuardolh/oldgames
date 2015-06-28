@@ -2,6 +2,8 @@ var canvas = document.getElementById('screen');
 var context = canvas.getContext('2d');
 canvas.addEventListener("touchstart", doTouchStart, false);
 canvas.addEventListener("touchend", doTouchEnd, false);
+canvas.addEventListener("mousedown", doClickStart, false);
+canvas.addEventListener("mouseup", doClickEnd, false);
 
 var miniconsole = {};
 miniconsole.paused = false;
@@ -34,6 +36,8 @@ miniconsole.input.KEY_UP = 38;
 miniconsole.input.KEY_DOWN = 40;
 miniconsole.input.touch_x = -1;
 miniconsole.input.touch_y = -1;
+miniconsole.input.click_x = -1;
+miniconsole.input.click_y = -1;
 
 function doTouchStart( event ){
 	event.preventDefault();
@@ -45,7 +49,14 @@ function doTouchEnd( event ){
 	miniconsole.input.touch_x = -1;
 	miniconsole.input.touch_y = -1;
 }
-
+function doClickStart( event ){
+	miniconsole.input.click_x = event.clientX;
+	miniconsole.input.click_y = event.clientY;
+}
+function doClickEnd( event ){
+	miniconsole.input.click_x = -1;
+	miniconsole.input.click_y = -1;
+}
 
 document.onkeydown =  function( event ){
 	event = event || window.event;
@@ -68,7 +79,7 @@ miniconsole.draw = function(){
 	canvas.width += -1;
 	
 	if( miniconsole.act == null ){
-		return
+		return;
 	}
 
 	if( !miniconsole.paused ){
@@ -85,7 +96,7 @@ miniconsole.draw = function(){
 
 miniconsole.update = function(){
 	if( miniconsole.act == null ){
-		return
+		return;
 	}
 	
 	if( miniconsole.ini ){
@@ -131,4 +142,7 @@ miniconsole.input.iskeydown = function( key ){
 };
 miniconsole.input.istouch = function( x, y, w, h ){
 	return ( miniconsole.input.touch_x >= x * miniconsole.video.cell_w && miniconsole.input.touch_x <= ( x+w )*miniconsole.video.cell_w ) && ( miniconsole.input.touch_y >= y*miniconsole.video.cell_h && miniconsole.input.touch_y <= ( y+h )*miniconsole.video.cell_h );
+};
+miniconsole.input.click = function( x, y, w, h ){
+	return ( miniconsole.input.click_x >= x * miniconsole.video.cell_w && miniconsole.input.click_x <= ( x+w )*miniconsole.video.cell_w ) && ( miniconsole.input.click_y >= y*miniconsole.video.cell_h && miniconsole.input.click_y <= ( y+h )*miniconsole.video.cell_h );
 };
