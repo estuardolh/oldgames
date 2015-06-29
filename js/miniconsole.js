@@ -113,10 +113,19 @@ miniconsole.update = function(){
 	if( !miniconsole.paused ) miniconsole.act.update();
 };
 
-miniconsole.interval = setInterval( function(){
+miniconsole.fps = 1000/60;
+miniconsole.main_loop = function(){
 	miniconsole.update();
 	miniconsole.draw();
-}, 60/1000 );
+};
+miniconsole.interval = setInterval( miniconsole.main_loop , miniconsole.fps );
+
+miniconsole.setFPS = function( fps ){
+	miniconsole.fps = fps;
+	
+	clearInterval( miniconsole.interval );
+	miniconsole.interval = setInterval( miniconsole.main_loop, miniconsole.fps );
+}
 
 miniconsole.show = function( act ){
 	miniconsole.act = act;

@@ -14,7 +14,8 @@ function Tank( options ){
 						 [2,1,0] ];
 	tan.struct_left = [  [0,1,2],
 						 [1,2,0],
-						 [0,1,2] ];			
+						 [0,1,2] ];
+
 	tan.struct = tan.struct_up;
 	tan.width = 3;
 	tan.height = 3;
@@ -26,6 +27,8 @@ function Tank( options ){
 	tan.POS_LEFT = 2;
 	tan.POS_UP = 3;
 	tan.pos = tan.POS_UP;
+	
+	tan.bullet = null;
 	
 	tan.touch_right = function(){
 		return tan.pad.right();
@@ -39,6 +42,41 @@ function Tank( options ){
 	tan.touch_up = function(){
 		return tan.pad.up();
 	}
+	tan.touch_a = function(){
+		return tan.pad.a();
+	}
+	
+	tan.shot = function(){
+		var vx, vy, di, dj;
+		switch( tan.pos ){
+			case tan.POS_RIGHT:{
+				vx = 1;
+				vy = 0;
+				di = 2;
+				dj = 1;
+			} break;
+			case tan.POS_DOWN:{
+				vx = 0;
+				vy = 1;
+				di = 1;
+				dj = 2;
+			} break;
+			case tan.POS_LEFT:{
+				vx = -1;
+				vy = 0;
+				di = 0;
+				dj = 1;
+			} break;
+			case tan.POS_UP:{
+				vx = 0;
+				vy = -1;
+				di = 1;
+				dj = 0;
+			} break;
+		}
+		
+		tan.bullet = { "x":parseInt(tan.x) + di, "y":parseInt(tan.y) + dj, "vx":vx, "vy":vy, "collide":false };
+	}
 	
 	tan.draw = function(){
 		var i, j;
@@ -49,24 +87,45 @@ function Tank( options ){
 				miniconsole.video.plot( parseInt(tan.x) + i, parseInt(tan.y) + j, row[ i ] );
 			}
 		}
+		
+		if( tan.bullet != null ) miniconsole.video.plot( tan.bullet.x, tan.bullet.y, miniconsole.video.PIXEL_HOT );
 	};
 	
 	tan.update = function(){
 		if( tan.touch_right() ){
 			tan.x += 0.2;
+			tan.pos = tan.POS_RIGHT;
 			tan.struct = tan.struct_right;
 		}
 		if( tan.touch_left() ){
 			tan.x -= 0.2;
+			tan.pos = tan.POS_LEFT;
 			tan.struct = tan.struct_left;
 		}
 		if( tan.touch_up() ){
 			tan.y -= 0.2;
+			tan.pos = tan.POS_UP;
 			tan.struct = tan.struct_up;
 		}
 		if( tan.touch_down() ){
 			tan.y += 0.2;
+			tan.pos = tan.POS_DOWN;
 			tan.struct = tan.struct_down;
+		}
+		
+		// bullet
+		if( tan.bullet != null ){
+			tan.bullet.x += tan.bullet.vx;
+			tan.bullet.y += tan.bullet.vy;
+			tan.bullet.collide = (tan.bullet.x > miniconsole.video.w || tan.bullet.x < 0 || tan.bullet.y > miniconsole.video.h || tan.bullet.y < 0);
+			
+			if( tan.touch_a() && tan.bullet.collide ){
+				tan.shot();
+			}
+		}else{
+			if( tan.touch_a() ){
+				tan.shot();
+			}
 		}
 	};
 	
@@ -88,9 +147,9 @@ function Pad(){
 	pad.show_index = pad.SHOW_RIGHT;
 	
 	pad.draw = function(){
+		var di, dj;
+		
 		if( pad.state == pad.STATE_ANIMATE ){
-			var di, dj;
-			
 			if( pad.show_index == pad.SHOW_RIGHT ){
 				di = 12;
 				dj = 4;
@@ -124,6 +183,19 @@ function Pad(){
 				for( var i = 0; i< 8; i++ ){
 					for( var j = 0; j< 4; j++ ){
 						miniconsole.video.plot( di+i, dj+j, miniconsole.video.PIXEL_WARM );
+					}
+				}
+			}
+			if( pad.show_index == pad.SHOW_UP 
+				|| pad.show_index == pad.SHOW_RIGHT
+				|| pad.show_index == pad.SHOW_DOWN
+				|| pad.show_index == pad.SHOW_LEFT ){
+				// A
+				di = 12;
+				dj = 12;
+				for( var i = 0; i<4 ; i++ ){
+					for( var j = 0; j< 4 ; j++ ){
+						if( !((i == 0 || i == 3) && ( j == 0 || j == 3 )) ) miniconsole.video.plot( di+i, dj+j, miniconsole.video.PIXEL_WARM );
 					}
 				}
 			}
@@ -164,8 +236,23 @@ function Pad(){
 	pad.right = function(){
 		return miniconsole.input.istouch( 12,4,4,8 ) || miniconsole.input.click( 12,4,4,8 );
 	};
+	pad.a = function(){
+		return miniconsole.input.istouch( 12,12,4,4 ) || miniconsole.input.click( 12,12,4,4 );
+	}
 	
 	return pad;
+}
+
+function CountDown( options ){
+	var co = {};
+	co.count = ( options == null || options.count == null ? 0 : options.count );
+	
+	co.ini = function( ini ){ co.count = ini; };
+	co.update = function( ){ if( --co.count < 0 ) co.count = 0; };
+	co.getCount = function(){ return co.count; };
+	co.isEnd = function(){ return co.count == 0; };
+	
+	return co;
 }
 
 function Tanks(){
