@@ -132,6 +132,114 @@ function Tank( options ){
 	return tan;
 }
 
+function Enemy( options ){
+	var enemy = {};
+	enemy.x = ( options.x == null ? 0 : options.x );
+	enemy.y = ( options.y == null ? 0 : options.y );
+	enemy.struct_up = [ [0,1,0],
+						[1,2,1],
+						[2,0,2] ];
+	enemy.struct_down =[[2,0,2],
+						[1,2,1],
+						[0,1,0] ];				
+	enemy.struct_right =[[2,1,0],
+						 [0,2,1],
+						 [2,1,0] ];
+	enemy.struct_left = [[0,1,2],
+						 [1,2,0],
+						 [0,1,2] ];						
+	enemy.struct = enemy.struct_down;
+	enemy.width = 3;
+	enemy.height = 3;
+	
+	enemy.STATE_INIT = 0;
+	enemy.STATE_PATROL = 1;
+	enemy.state = enemy.STATE_INIT;
+	enemy.POS_DOWN = 0;
+	enemy.POS_RIGHT = 1;
+	enemy.POS_UP = 2;
+	enemy.POS_LEFT = 3;
+	enemy.pos = ( options == null || options.pos == null ? enemy.POS_DOWN : options.pos );
+	
+	enemy.rip = false;
+	enemy.next_orientation = new CountDown({ "count": 14, "loop" : true });
+	
+	enemy.draw = function(){
+		var i, j;
+		var row;
+		for( j = 0; j < 3 ; j++ ){
+			row = enemy.struct[ j ];
+			for( i = 0; i < 3 ; i++ ){
+				miniconsole.video.plot( parseInt(enemy.x) + i, parseInt(enemy.y) + j, row[ i ] );
+			}
+		}
+	};
+	
+	enemy.ll_can_move = function( x, y){
+		var res = !( enemy.x + enemy.width + x > miniconsole.video.w || enemy.x + x < 0 || enemy.y + enemy.height + y > miniconsole.video.h || enemy.y + y < 0);
+		
+		if(!res) console.log("can't move to x "+x+" y "+y+"? "+res);
+		
+		return res;
+	};
+	enemy.move = function( x, y ){
+		enemy.x += x;
+		enemy.y += y;
+		
+		if( x > 0 ){
+			enemy.struct = enemy.struct_right;
+		}else if( y > 0 ){
+			enemy.struct = enemy.struct_down;
+		}else if( x < 0 ){
+			enemy.struct = enemy.struct_left;
+		}else if( y < 0 ){
+			enemy.struct = enemy.struct_up;
+		}
+		
+		//console.log("move to x "+x+" y "+y);
+	};
+	
+	
+	enemy.update = function(){
+		if( enemy.state == enemy.STATE_INIT ){
+			enemy.state = enemy.STATE_PATROL;
+		}else if( enemy.state == enemy.STATE_PATROL ){
+			
+			var ll_can = false;
+			
+			while( ll_can == false && enemy.next_orientation.isEnd() ){
+				var x = 0;
+				var y = 0;
+				
+				if( enemy.pos == enemy.POS_DOWN ){
+					y = 1;
+					ll_can = enemy.ll_can_move(0 , y);
+				}else if( enemy.pos == enemy.POS_RIGHT ){
+					x = 1;
+					ll_can = enemy.ll_can_move(x , 0);
+				}else if( enemy.pos == enemy.POS_UP ){
+					y = -1;
+					ll_can = enemy.ll_can_move(0 , y);
+				}else if( enemy.pos == enemy.POS_LEFT ){
+					x = -1;
+					ll_can = enemy.ll_can_move(x , 0);
+				}
+				if( ll_can == true ){
+					enemy.move( x, y );
+				}else{
+					enemy.pos++;
+					
+					if( enemy.pos == 4 ) enemy.pos = enemy.POS_DOWN;
+				}
+			}
+		}
+		
+		enemy.next_orientation.update();
+	};
+	
+	return enemy;
+}
+
 function Pad(){
 	var pad = {};
 	pad.used = false;
@@ -243,31 +351,51 @@ function Pad(){
 	return pad;
 }
 
-function CountDown( options ){
-	var co = {};
-	co.count = ( options == null || options.count == null ? 0 : options.count );
-	
-	co.ini = function( ini ){ co.count = ini; };
-	co.update = function( ){ if( --co.count < 0 ) co.count = 0; };
-	co.getCount = function(){ return co.count; };
-	co.isEnd = function(){ return co.count == 0; };
-	
-	return co;
-}
-
 function Tanks(){
 	var tanks = {};
 	tanks.pad = new Pad();
 	tanks.hero = new Tank({ "pad": tanks.pad });
+	tanks.enemies = [];
+	
+	tanks.process_bullets = function( hero, enemies ){
+		if( enemies != null && hero != null ){
+			if( hero.bullet != null ){
+				enemies.forEach(function( enemy ){
+					if( (hero.bullet.x >= enemy.x && hero.bullet.x <= enemy.x+enemy.width)
+						&& (hero.bullet.y >= enemy.y && hero.bullet.y <= enemy.y+enemy.height) ){
+						console.log("ok!");
+					}
+				});	
+			}
+		}else{
+			console.log("ERROR: hero or enemies are null.");
+		}
+	};
+	
+	tanks.process_enemies = function(){
+		if( tanks.enemies.length <= 1 /* max enemies */ ){
+			tanks.enemies.push( new Enemy({ "x": 0, "y": 0 })  );
+		}
+	}
 	
 	tanks.draw = function(){
 		tanks.pad.draw();
 		tanks.hero.draw();
+		
+		tanks.enemies.forEach( function( enemy ){
+			enemy.draw();
+		} );
 	};
 	
 	tanks.update = function(){
 		tanks.pad.update();
 		tanks.hero.update();
+		
+		tanks.process_enemies(  );
+		tanks.process_bullets( tanks.hero, tanks.enemies );
+		tanks.enemies.forEach( function( enemy ){
+			enemy.update();
+		} );
 	};
 	
 	return tanks;
