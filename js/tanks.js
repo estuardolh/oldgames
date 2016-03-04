@@ -147,7 +147,7 @@ function Enemy( options ){
 						 [2,1,0] ];
 	enemy.struct_left = [[0,1,2],
 						 [1,2,0],
-						 [0,1,2] ];						
+						 [0,1,2] ];				
 	enemy.struct = enemy.struct_down;
 	enemy.width = 3;
 	enemy.height = 3;
@@ -207,7 +207,8 @@ function Enemy( options ){
 			
 			var ll_can = false;
 			
-			while( ll_can == false && enemy.next_orientation.isEnd() ){
+			// WARNING> revisar este loop!
+			while( ll_can == false && enemy.next_orientation.isEnd() && /*provicional*/ false ){
 				var x = 0;
 				var y = 0;
 				
@@ -373,18 +374,47 @@ function Tanks(){
 	};
 	
 	tanks.process_enemies = function(){
-		if( tanks.enemies.length <= 1 /* max enemies */ ){
-			tanks.enemies.push( new Enemy({ "x": 0, "y": 0 })  );
+		if( tanks.enemies.length < 3 /* max enemies */ ){
+			var x, y;
+			if( Math.random() <= 0.5 ){
+				x = 0;
+				y = 0;
+			}else{
+				x = miniconsole.video.w;
+				y = 0;
+			}
+			tanks.enemies.push( new Enemy({ "x": x, "y": y })  ); // enemy can't move! >:[
 		}
 	}
 	
 	tanks.draw = function(){
-		tanks.pad.draw();
-		tanks.hero.draw();
+		//tanks.pad.draw();
+		//tanks.hero.draw();
 		
-		tanks.enemies.forEach( function( enemy ){
+	miniconsole.video.set( 5, 5,
+		[
+		[0,2,0],
+		[2,2,2],
+		[1,0,1],
+		] );
+		
+	miniconsole.video.set( 10, 5,
+		[
+		[2],
+		[0],
+		[1],
+		] );
+	
+	miniconsole.video.set( 2, 2, [1,0,2] );
+	
+	miniconsole.video.set( 1, 1, [1] );
+	
+	miniconsole.video.set( 0, 0, [2] );
+		
+		/*tanks.enemies.forEach( function( enemy ){
 			enemy.draw();
 		} );
+		*/
 	};
 	
 	tanks.update = function(){
