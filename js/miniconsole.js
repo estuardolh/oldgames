@@ -14,9 +14,11 @@ miniconsole.ini = true;
 miniconsole.matrix = [];
 miniconsole.cell_w = 10;
 miniconsole.cell_h = 10;
+miniconsole.debug = false;
 
 miniconsole.video = {};
 miniconsole.input = {};
+miniconsole.util = {};
 
 miniconsole.video.w = 10;
 miniconsole.video.h = 10;
@@ -153,11 +155,13 @@ miniconsole.show = function( act ){
 
 miniconsole.video.get = function( x, y ){
 	if( x >= miniconsole.video.w ){
-		console.log("WARNING: x="+x+" outs of matrix width");
+		if( miniconsole.debug ) console.log("WARNING: x="+x+" outs of matrix width");
+		
 		return -1;
 	}
 	if( y >= miniconsole.video.h ){
-		console.log("WARNING: y="+y+" outs of matrix height");
+		if( miniconsole.debug ) console.log("WARNING: y="+y+" outs of matrix height");
+		
 		return -1;
 	}
 	
@@ -177,16 +181,17 @@ miniconsole.video.plot = function( x, y, intensity ){
 	
 	if( x < miniconsole.video.w ){
 		column = miniconsole.matrix[ x ];
-		if( y < miniconsole.video.h ){
+		
+		if( y < miniconsole.video.h
+			&& column != null 
+			&& typeof column !== 'undefined' ){
 			column[ y ] = {"x": x, "y": y, "value": intensity};
 		}else{
-			console.log( "WARNING: position y="+x+" outs of range h="+miniconsole.video.h );
+			if( miniconsole.debug ) console.log( "WARNING: position y="+x+" outs of matrix height="+miniconsole.video.h );
 		}
 	}else{
-		console.log( "WARNING: position x="+x+" outs of range w="+miniconsole.video.w );
+		if( miniconsole.debug ) console.log( "WARNING: position x="+x+" outs of matrix width="+miniconsole.video.w );
 	}
-	
-	
 };
 
 miniconsole.video.draw_struct = function( x, y, it ){
@@ -230,4 +235,7 @@ miniconsole.input.istouch = function( x, y, w, h ){
 };
 miniconsole.input.click = function( x, y, w, h ){
 	return ( miniconsole.input.click_x >= x * miniconsole.video.cell_w && miniconsole.input.click_x <= ( x+w )*miniconsole.video.cell_w ) && ( miniconsole.input.click_y >= y*miniconsole.video.cell_h && miniconsole.input.click_y <= ( y+h )*miniconsole.video.cell_h );
+};
+miniconsole.input.click_touch = function( x, y, w, h ){
+	return miniconsole.input.click( x, y, w, h ) || miniconsole.input.istouch( x, y, w, h );
 };

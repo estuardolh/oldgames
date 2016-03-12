@@ -47,22 +47,6 @@ function Tank( options ){
 	
 	tan.bullet = null;
 	
-	tan.touch_right = function(){
-		return tan.pad.right();
-	};
-	tan.touch_down = function(){
-		return tan.pad.down();
-	};
-	tan.touch_left = function(){
-		return tan.pad.left();
-	};
-	tan.touch_up = function(){
-		return tan.pad.up();
-	};
-	tan.touch_a = function(){
-		return tan.pad.a();
-	};
-	
 	tan.shot = function(){
 		var vx, vy, di, dj;
 		switch( tan.pos ){
@@ -100,7 +84,7 @@ function Tank( options ){
 		var row;
 		
 		miniconsole.video.set( parseInt( tan.x ), parseInt( tan.y ), tan.struct );
-		
+			
 		if( tan.bullet != null ) miniconsole.video.plot( tan.bullet.x, tan.bullet.y, miniconsole.video.PIXEL_HOT );
 	};
 	
@@ -166,22 +150,22 @@ function Tank( options ){
 				}
 			}
 		}else{
-			if( tan.touch_right() ){
+			if( tan.pad.right() ){
 				tan.x += tan.vx;
 				tan.pos = tan.POS_RIGHT;
 				tan.struct = tan.struct_right;
 			}
-			if( tan.touch_left() ){
+			if( tan.pad.left() ){
 				tan.x -= tan.vx;
 				tan.pos = tan.POS_LEFT;
 				tan.struct = tan.struct_left;
 			}
-			if( tan.touch_up() ){
+			if( tan.pad.up() ){
 				tan.y -= tan.vy;
 				tan.pos = tan.POS_UP;
 				tan.struct = tan.struct_up;
 			}
-			if( tan.touch_down() ){
+			if( tan.pad.down() ){
 				tan.y += tan.vy;
 				tan.pos = tan.POS_DOWN;
 				tan.struct = tan.struct_down;
@@ -194,11 +178,11 @@ function Tank( options ){
 				tan.bullet.collide = (tan.bullet.x > miniconsole.video.w || tan.bullet.x < 0 || tan.bullet.y > miniconsole.video.h || tan.bullet.y < 0);
 				
 				// you can press A only if existent bullet collide
-				if( tan.touch_a() && tan.bullet.collide ){
+				if( tan.pad.a() && tan.bullet.collide ){
 					tan.shot();
 				}
 			}else{
-				if( tan.touch_a() ){
+				if( tan.pad.a() ){
 					tan.shot();
 				}
 			}
@@ -296,19 +280,19 @@ function Pad(){
 	};
 	
 	pad.down = function(){
-		return miniconsole.input.istouch( 4,12,8,4 ) || miniconsole.input.click( 4,12,8,4 );
+		return miniconsole.input.click_touch( 4,12,8,4 );
 	};
 	pad.up = function(){
-		return miniconsole.input.istouch( 4,0,8,4 ) || miniconsole.input.click( 4,0,8,4 );
+		return miniconsole.input.click_touch( 4,0,8,4 );
 	};
 	pad.left = function(){
-		return miniconsole.input.istouch( 0,4,4,8 ) || miniconsole.input.click( 0,4,4,8 );
+		return miniconsole.input.click_touch( 0,4,4,8 );
 	};
 	pad.right = function(){
-		return miniconsole.input.istouch( 12,4,4,8 ) || miniconsole.input.click( 12,4,4,8 );
+		return miniconsole.input.click_touch( 12,4,4,8 );
 	};
 	pad.a = function(){
-		return miniconsole.input.istouch( 12,12,4,4 ) || miniconsole.input.click( 12,12,4,4 );
+		return miniconsole.input.click_touch( 12,12,4,4 );
 	}
 	
 	return pad;
@@ -319,6 +303,7 @@ function Tanks(){
 	tanks.pad = new Pad();
 	tanks.hero = new Tank({ "pad": tanks.pad, is_auto: false });
 	tanks.enemies = [];
+	tanks.ini = true;
 	
 	tanks.process_bullets = function( hero, enemies ){
 		if( enemies != null && hero != null ){
@@ -326,9 +311,16 @@ function Tanks(){
 				enemies.forEach(function( enemy ){
 					if( (hero.bullet.x >= enemy.x && hero.bullet.x <= enemy.x+enemy.width)
 						&& (hero.bullet.y >= enemy.y && hero.bullet.y <= enemy.y+enemy.height) ){
-						console.log("ok!");
+						enemy.rip = true;
 					}
-				});	
+				});
+				
+				// remove destroyed tanks
+				for( var i = 0 ; i < enemies.length ; i++ ){
+					if( enemies[ i ].rip == true ){
+						enemies.splice( i, 1 );
+					}
+				}
 			}
 		}else{
 			console.log("ERROR: hero or enemies are null.");
@@ -336,16 +328,14 @@ function Tanks(){
 	};
 	
 	tanks.process_enemies = function(){
-		if( tanks.enemies.length != 2 /* max enemies */ ){
-			var x, y;
-			
-			x = 0;
-			y = 0;
-			tanks.enemies.push( new Tank({ "x": x, "y": y, "is_auto": true })  );
-			
-			x = miniconsole.video.w - 3 ;
-			tanks.enemies.push( new Tank({ "x": x, "y": y, "is_auto": true })  );
-		}
+		var x, y;
+		
+		x = 0;
+		y = 0;
+		tanks.enemies.push( new Tank({ "x": x, "y": y, "is_auto": true })  );
+		
+		x = miniconsole.video.w - 3 ;
+		tanks.enemies.push( new Tank({ "x": x, "y": y, "is_auto": true })  );
 	}
 	
 	tanks.draw = function(){
@@ -361,7 +351,10 @@ function Tanks(){
 		tanks.pad.update();
 		tanks.hero.update();
 		
-		tanks.process_enemies();
+		if( tanks.ini ){
+			tanks.process_enemies();
+			tanks.ini = false;
+		}
 		tanks.process_bullets( tanks.hero, tanks.enemies );
 		tanks.enemies.forEach( function( enemy ){
 			enemy.update();
