@@ -34,6 +34,7 @@ function Tank( options ){
 	
 	tan.STATE_INIT = 0;
 	tan.STATE_PATROL = 1;
+	tan.STATE_PARALYZED = 2;
 	tan.state = tan.STATE_INIT;
 	
 	tan.POS_DOWN = 0;
@@ -189,6 +190,12 @@ function Tank( options ){
 		}
 	};
 	
+	tan.stop_go = function(){
+		if( ! tan.is_auto ) return;
+		
+		tan.state = ( tan.state == tan.STATE_PARALYZED ? tan.STATE_PATROL : tan.STATE_PARALYZED );
+	};
+	
 	return tan;
 }
 
@@ -307,10 +314,10 @@ function Tanks(){
 	
 	tanks.process_bullets = function( hero, enemies ){
 		if( enemies != null && hero != null ){
-			if( hero.bullet != null ){
+			if( hero.bullet != null && ! hero.bullet.collide ){
 				enemies.forEach(function( enemy ){
-					if( (hero.bullet.x >= enemy.x && hero.bullet.x <= enemy.x+enemy.width)
-						&& (hero.bullet.y >= enemy.y && hero.bullet.y <= enemy.y+enemy.height) ){
+					if( (hero.bullet.x >= parseInt(enemy.x) && hero.bullet.x < parseInt(enemy.x)+enemy.width)
+						&& (hero.bullet.y >= parseInt(enemy.y) && hero.bullet.y < parseInt(enemy.y)+enemy.height) ){
 						enemy.rip = true;
 					}
 				});
