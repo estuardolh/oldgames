@@ -29,8 +29,8 @@ function Tank( options ){
 	tan.struct = tan.struct_down;
 	tan.width = 3;
 	tan.height = 3;
-	tan.vx = 0.2;
-	tan.vy = 0.2;
+	tan.vx = 0.08;
+	tan.vy = 0.08;
 	
 	tan.STATE_INIT = 0;
 	tan.STATE_PATROL = 1;
