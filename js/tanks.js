@@ -32,10 +32,8 @@ function Tank( options ){
 	tan.vx = 0.08;
 	tan.vy = 0.08;
 	
-	tan.STATE_INIT = 0;
-	tan.STATE_PATROL = 1;
-	tan.STATE_PARALYZED = 2;
-	tan.state = tan.STATE_INIT;
+	tan.states = { STATE_INIT: 0, STATE_PATROL: 1, STATE_PARALYZED: 2 };
+	tan.state = tan.states.STATE_INIT;
 	
 	tan.POS_DOWN = 0;
 	tan.POS_RIGHT = 1;
@@ -49,29 +47,35 @@ function Tank( options ){
 	tan.bullet = null;
 	
 	tan.shot = function(){
-		var vx, vy, di, dj;
+		var vx = 0.5, vy, di, dj;
+		vy = vx;
+		
 		switch( tan.pos ){
 			case tan.POS_RIGHT:{
-				vx = 1;
-				vy = 0;
+				vx *= 1;
+				vy *= 0;
+				
 				di = 2;
 				dj = 1;
 			} break;
 			case tan.POS_DOWN:{
-				vx = 0;
-				vy = 1;
+				vx *= 0;
+				vy *= 1;
+				
 				di = 1;
 				dj = 2;
 			} break;
 			case tan.POS_LEFT:{
-				vx = -1;
-				vy = 0;
+				vx *= -1;
+				vy *= 0;
+				
 				di = 0;
 				dj = 1;
 			} break;
 			case tan.POS_UP:{
-				vx = 0;
-				vy = -1;
+				vx *= 0;
+				vy *= -1;
+				
 				di = 1;
 				dj = 0;
 			} break;
@@ -115,9 +119,9 @@ function Tank( options ){
 	
 	tan.update = function(){
 		if( tan.is_auto ){
-			if( tan.state == tan.STATE_INIT ){
-				tan.state = tan.STATE_PATROL;
-			}else if( tan.state == tan.STATE_PATROL ){
+			if( tan.state == tan.states.STATE_INIT ){
+				tan.state = tan.states.STATE_PATROL;
+			}else if( tan.state == tan.states.STATE_PATROL ){
 				var ll_can = false;
 				
 				tan.next_orientation.ini(1);
@@ -181,10 +185,13 @@ function Tank( options ){
 				// you can press A only if existent bullet collide
 				if( tan.pad.a() && tan.bullet.collide ){
 					tan.shot();
+					
+					tan.struct = miniconsole.array.rotate( tan.struct );
 				}
 			}else{
 				if( tan.pad.a() ){
 					tan.shot();
+					tan.struct = miniconsole.array.rotate( tan.struct );
 				}
 			}
 		}
@@ -193,7 +200,7 @@ function Tank( options ){
 	tan.stop_go = function(){
 		if( ! tan.is_auto ) return;
 		
-		tan.state = ( tan.state == tan.STATE_PARALYZED ? tan.STATE_PATROL : tan.STATE_PARALYZED );
+		tan.state = ( tan.state == tan.states.STATE_PARALYZED ? tan.states.STATE_PATROL : tan.states.STATE_PARALYZED );
 	};
 	
 	return tan;

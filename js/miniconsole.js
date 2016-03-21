@@ -230,12 +230,47 @@ miniconsole.video.draw_struct = function( x, y, it ){
 miniconsole.input.iskeydown = function( key ){
 	return ( miniconsole.input.actual_key_down == key );
 };
-miniconsole.input.istouch = function( x, y, w, h ){
+miniconsole.input.touch = function( x, y, w, h ){
 	return ( miniconsole.input.touch_x >= x * miniconsole.video.cell_w && miniconsole.input.touch_x <= ( x+w )*miniconsole.video.cell_w ) && ( miniconsole.input.touch_y >= y*miniconsole.video.cell_h && miniconsole.input.touch_y <= ( y+h )*miniconsole.video.cell_h );
 };
 miniconsole.input.click = function( x, y, w, h ){
 	return ( miniconsole.input.click_x >= x * miniconsole.video.cell_w && miniconsole.input.click_x <= ( x+w )*miniconsole.video.cell_w ) && ( miniconsole.input.click_y >= y*miniconsole.video.cell_h && miniconsole.input.click_y <= ( y+h )*miniconsole.video.cell_h );
 };
 miniconsole.input.click_touch = function( x, y, w, h ){
-	return miniconsole.input.click( x, y, w, h ) || miniconsole.input.istouch( x, y, w, h );
+	return miniconsole.input.click( x, y, w, h ) || miniconsole.input.touch( x, y, w, h );
 };
+
+miniconsole.array = {};
+
+// clockwise
+miniconsole.array.rotate = function( array_2d ){
+	var array_temp = [], array_temp_row = []
+	, array_2d_column = []
+	, array_2d_width;
+	
+	array_2d_width = array_2d[0].length;
+	
+	
+	var j = 0;
+	
+	for( var j0 = 0; j0 < array_2d_width ; j0++ ){
+		
+		for( var i1 = 0; i1 < array_2d.length ; i1++ ){
+			array_2d_column = array_2d[i1];
+			array_temp_row[i1] = array_2d_column[j0];
+			
+			if( i1 == (array_2d.length - 1) ){
+				array_temp[j0] = array_temp_row;
+				
+				console.log( array_temp_row.toString() );
+				
+				array_temp_row = [];
+			}
+		}
+	}
+	
+	return array_temp;
+};
+miniconsole.array.print = function( array_2d ){
+	 
+}
