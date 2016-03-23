@@ -243,34 +243,104 @@ miniconsole.input.click_touch = function( x, y, w, h ){
 miniconsole.array = {};
 
 // clockwise
-miniconsole.array.rotate = function( array_2d ){
-	var array_temp = [], array_temp_row = []
-	, array_2d_column = []
-	, array_2d_width;
+miniconsole.array.rotate = function( array_2d, opt_sense ){
+	var array_temp = []
+	, array_2d_width = array_2d[0].length;
+	opt_sense = ( typeof opt_sense === 'undefined' ? 1 /* clockwise */ : opt_sense /* counterclockwise */ )
 	
-	array_2d_width = array_2d[0].length;
+	// copy array_2d to temp_array
+	array_temp = miniconsole.array.clone( array_2d );
 	
-	
-	var j = 0;
-	
-	for( var j0 = 0; j0 < array_2d_width ; j0++ ){
-		
-		for( var i1 = 0; i1 < array_2d.length ; i1++ ){
-			array_2d_column = array_2d[i1];
-			array_temp_row[i1] = array_2d_column[j0];
+	if( opt_sense == 1 ){
+		// clockwise: read columns from right to left and set it as rows
+		var ii = 0;
+		for( var i = ( array_2d.length - 1 ); i > -1 ; i-- ){
+			var column = miniconsole.array.getColumn( i, array_2d );
 			
-			if( i1 == (array_2d.length - 1) ){
-				array_temp[j0] = array_temp_row;
-				
-				console.log( array_temp_row.toString() );
-				
-				array_temp_row = [];
-			}
+			array_temp = miniconsole.array.setRow( ii /*arg j*/, array_temp, column );
+			ii++;
+		}
+	}else{
+		// counterclockwise: read in reverse columns and set it as rows
+		for( var i = 0; i < array_2d.length ; i++ ){
+			var column = miniconsole.array.getColumn( i, array_2d ).reverse();
+			
+			array_temp = miniconsole.array.setRow( i /*arg j*/, array_temp, column );
 		}
 	}
 	
 	return array_temp;
 };
-miniconsole.array.print = function( array_2d ){
-	 
-}
+miniconsole.array.setRow = function( j, array_2d, array_1d ){
+	
+	var array_2d_clone = miniconsole.array.clone( array_2d );
+	
+	// for each column
+	for( var i = 0; i < array_2d_clone.length ; i++ ){
+		var column = array_2d_clone[ i ];
+		
+		// if there is array_1d items to fill
+		if( i < array_1d.length ){
+			column[ j ] = array_1d[ i ]; // asignate j'th 
+		}else{
+			console.log('break[!]');
+		}
+	}
+	
+	return array_2d_clone;
+};
+miniconsole.array.setColumn = function( i, array_2d, array_1d ){
+	var column = array_2d[ i ];
+	column[ i ] = array_1d;
+	
+	return array_2d;
+};
+miniconsole.array.getRow = function( j, array_2d ){
+	var array_1d = [];
+	
+	for( var i = 0; i < array_2d.length; i++ ){
+		var column = array_2d[ i ];
+		array_1d[ i ] = column[ j ];
+	}
+	
+	return array_1d;
+};
+miniconsole.array.getColumn = function( i, array_2d ){
+	var array_2d_clone = miniconsole.array.clone( array_2d );
+	return array_2d_clone[ i ];
+};
+miniconsole.array.clone = function( array_2d ){
+	var array_temp = [];
+	var array_2d_width = array_2d[0].length;
+	
+	
+	for( var i = 0 ; i < array_2d.length ; i++ ){
+		var src_column = array_2d[ i ];
+		
+		var dst_column = [];
+		for( var j = 0 ; j < array_2d_width ; j++ ){
+			dst_column[ j ] = src_column[ j ];
+		}
+		
+		array_temp[ i ] = dst_column;
+	}
+	
+	return array_temp;
+};
+miniconsole.array._toString = function( array_2d ){
+	var array_2d_width = array_2d[0].length;
+	var str_row = "";
+	
+	for( var j = 0 ; j < array_2d_width ; j++ ){
+		
+		for( var i = 0 ; i < array_2d.length ; i++ ){
+			var column = array_2d[ i ];
+			str_row = str_row + ", " + column[ j ];
+		}
+		
+		
+		console.log(( j == 0 ? "{ " : "  " )+"["+str_row+"]"+( j == (array_2d_width - 1) ? " }" : "  " ));
+		str_row = "";
+	}
+	
+};

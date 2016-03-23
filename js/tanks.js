@@ -34,12 +34,9 @@ function Tank( options ){
 	
 	tan.states = { STATE_INIT: 0, STATE_PATROL: 1, STATE_PARALYZED: 2 };
 	tan.state = tan.states.STATE_INIT;
-	
-	tan.POS_DOWN = 0;
-	tan.POS_RIGHT = 1;
-	tan.POS_UP = 2;
-	tan.POS_LEFT = 3;
-	tan.pos = ( options == null || options.pos == null ? tan.POS_DOWN : options.pos );;
+
+	tan.positions = { DOWN: 0, RIGHT: 1, UP: 2, LEFT: 3 };
+	tan.pos = ( options == null || options.pos == null ? tan.positions.DOWN : options.pos );;
 	
 	tan.rip = false;
 	tan.next_orientation = new CountDown({ "count": 28, "loop" : true });	
@@ -51,28 +48,28 @@ function Tank( options ){
 		vy = vx;
 		
 		switch( tan.pos ){
-			case tan.POS_RIGHT:{
+			case tan.positions.RIGHT:{
 				vx *= 1;
 				vy *= 0;
 				
 				di = 2;
 				dj = 1;
 			} break;
-			case tan.POS_DOWN:{
+			case tan.positions.DOWN:{
 				vx *= 0;
 				vy *= 1;
 				
 				di = 1;
 				dj = 2;
 			} break;
-			case tan.POS_LEFT:{
+			case tan.positions.LEFT:{
 				vx *= -1;
 				vy *= 0;
 				
 				di = 0;
 				dj = 1;
 			} break;
-			case tan.POS_UP:{
+			case tan.positions.UP:{
 				vx *= 0;
 				vy *= -1;
 				
@@ -102,18 +99,80 @@ function Tank( options ){
 		return res;
 	};
 	
+	tan.rotate_to = function( to ){
+		// rotate struct. And Switchs are cute.  For cicle instead this?.
+		switch( to ){
+			case tan.positions.DOWN :{
+				if( tan.pos == tan.positions.DOWN ){
+					// Nothing
+				}else if( tan.pos == tan.positions.RIGHT ){
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+				}else if( tan.pos == tan.positions.LEFT ){
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+				}else if( tan.pos == tan.positions.UP ){
+					// implement miniconsole.array.MIRROR( [X/Y] ) ?
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+				}
+			}; break;
+			case tan.positions.LEFT :{
+				if( tan.pos == tan.positions.DOWN ){
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+				}else if( tan.pos == tan.positions.RIGHT ){
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+				}else if( tan.pos == tan.positions.LEFT ){
+					// Nothing
+				}else if( tan.pos == tan.positions.UP ){
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+				}
+			}; break;
+			case tan.positions.RIGHT :{
+				if( tan.pos == tan.positions.DOWN ){
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+				}else if( tan.pos == tan.positions.RIGHT ){
+					// Nothing
+				}else if( tan.pos == tan.positions.LEFT ){
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+				}else if( tan.pos == tan.positions.UP ){
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+				}
+			}; break;
+			case tan.positions.UP :{
+				if( tan.pos == tan.positions.DOWN ){
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+				}else if( tan.pos == tan.positions.RIGHT ){
+					tan.struct = miniconsole.array.rotate( tan.struct, -1 );
+				}else if( tan.pos == tan.positions.LEFT ){
+					tan.struct = miniconsole.array.rotate( tan.struct, 1 );
+				}else if( tan.pos == tan.positions.UP ){
+					// Nothing
+				}
+			}
+		}// end switch
+		
+		// change or consevate position
+		tan.pos = ( tan.pos == to ? tan.pos : to );
+	};
+	
 	tan.move = function( x, y ){
 		tan.x += x * tan.vx;
 		tan.y += y * tan.vy;
 		
 		if( x > 0 ){
-			tan.struct = tan.struct_right;
+			//tan.struct = tan.struct_right;
+			tan.rotate_to( tan.positions.RIGHT );
 		}else if( y > 0 ){
-			tan.struct = tan.struct_down;
+			//tan.struct = tan.struct_down;
+			tan.rotate_to( tan.positions.DOWN );
 		}else if( x < 0 ){
-			tan.struct = tan.struct_left;
+			//tan.struct = tan.struct_left;
+			tan.rotate_to( tan.positions.LEFT );
 		}else if( y < 0 ){
-			tan.struct = tan.struct_up;
+			//tan.struct = tan.struct_up;
+			tan.rotate_to( tan.positions.UP );
 		}
 	};
 	
@@ -130,16 +189,16 @@ function Tank( options ){
 					var y = 0;
 					
 					if( ll_can == false ){
-						if( tan.pos == tan.POS_DOWN ){
+						if( tan.pos == tan.positions.DOWN ){
 							y = 1;
 							ll_can = tan.should_move(0 , y);
-						}else if( tan.pos == tan.POS_RIGHT ){
+						}else if( tan.pos == tan.positions.RIGHT ){
 							x = 1;
 							ll_can = tan.should_move(x , 0);
-						}else if( tan.pos == tan.POS_UP ){
+						}else if( tan.pos == tan.positions.UP ){
 							y = -1;
 							ll_can = tan.should_move(0 , y);
-						}else if( tan.pos == tan.POS_LEFT ){
+						}else if( tan.pos == tan.positions.LEFT ){
 							x = -1;
 							ll_can = tan.should_move(x , 0);
 						}
@@ -147,9 +206,9 @@ function Tank( options ){
 						if( ll_can == true ) tan.move( x, y );
 						
 						if( !ll_can ){
-							tan.pos++;
+							tan.pos++; // xd
 						
-							if( tan.pos == 4 ) tan.pos = tan.POS_DOWN;
+							if( tan.pos == 4 ) tan.pos = tan.positions.DOWN;
 						}
 					}
 				}
@@ -157,23 +216,23 @@ function Tank( options ){
 		}else{
 			if( tan.pad.right() ){
 				tan.x += tan.vx;
-				tan.pos = tan.POS_RIGHT;
-				tan.struct = tan.struct_right;
+
+				tan.rotate_to( tan.positions.RIGHT );
 			}
 			if( tan.pad.left() ){
 				tan.x -= tan.vx;
-				tan.pos = tan.POS_LEFT;
-				tan.struct = tan.struct_left;
+				
+				tan.rotate_to( tan.positions.LEFT );
 			}
 			if( tan.pad.up() ){
 				tan.y -= tan.vy;
-				tan.pos = tan.POS_UP;
-				tan.struct = tan.struct_up;
+				
+				tan.rotate_to( tan.positions.UP );
 			}
 			if( tan.pad.down() ){
 				tan.y += tan.vy;
-				tan.pos = tan.POS_DOWN;
-				tan.struct = tan.struct_down;
+				
+				tan.rotate_to( tan.positions.DOWN );
 			}
 			
 			if( tan.bullet != null ){
@@ -185,13 +244,10 @@ function Tank( options ){
 				// you can press A only if existent bullet collide
 				if( tan.pad.a() && tan.bullet.collide ){
 					tan.shot();
-					
-					tan.struct = miniconsole.array.rotate( tan.struct );
 				}
 			}else{
 				if( tan.pad.a() ){
 					tan.shot();
-					tan.struct = miniconsole.array.rotate( tan.struct );
 				}
 			}
 		}
